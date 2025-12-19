@@ -1,4 +1,4 @@
--- Nebula UI Library V235235235235
+-- Nebula UI Library V2.1 - Complete Edition
 -- Modern UI with all features working
 
 local NebulaUI = {}
