@@ -1,4 +1,4 @@
--- Nebula UI Library V2.1 - Complete Edition
+-- Nebula UI Library V235235235235
 -- Modern UI with all features working
 
 local NebulaUI = {}
@@ -1348,6 +1348,124 @@ function NebulaUI:CreateWindow(config)
         end
         
         return Tab
+    end
+    
+    -- Config Manager Tab
+    function Window:AddConfigSection()
+        local ConfigTab = self:CreateTab("Configs")
+        local ConfigSection = ConfigTab:CreateSection("Config Manager")
+        
+        local configInput = ""
+        
+        -- Config name input using textbox
+        local InputFrame = Instance.new("Frame")
+        InputFrame.Name = "ConfigInput"
+        InputFrame.BackgroundTransparency = 1
+        InputFrame.Size = UDim2.new(1, 0, 0, 36)
+        InputFrame.Parent = ConfigSection.Container
+        
+        local InputLabel = Instance.new("TextLabel")
+        InputLabel.BackgroundTransparency = 1
+        InputLabel.Size = UDim2.new(0, 90, 1, 0)
+        InputLabel.Font = Enum.Font.GothamMedium
+        InputLabel.Text = "Config Name"
+        InputLabel.TextColor3 = Colors.Text
+        InputLabel.TextSize = 13
+        InputLabel.TextXAlignment = Enum.TextXAlignment.Left
+        InputLabel.Parent = InputFrame
+        
+        local InputBox = Instance.new("TextBox")
+        InputBox.BackgroundColor3 = Colors.Surface
+        InputBox.BorderSizePixel = 0
+        InputBox.Position = UDim2.new(0, 95, 0.5, -14)
+        InputBox.Size = UDim2.new(1, -100, 0, 28)
+        InputBox.Font = Enum.Font.Gotham
+        InputBox.PlaceholderText = "Enter config name..."
+        InputBox.PlaceholderColor3 = Colors.TextSecondary
+        InputBox.Text = ""
+        InputBox.TextColor3 = Colors.Text
+        InputBox.TextSize = 12
+        InputBox.ClearTextOnFocus = false
+        InputBox.Parent = InputFrame
+        
+        local InputCorner = Instance.new("UICorner")
+        InputCorner.CornerRadius = UDim.new(0, 6)
+        InputCorner.Parent = InputBox
+        
+        CreateStroke(InputBox, 1, Colors.Primary, 0.6)
+        
+        InputBox:GetPropertyChangedSignal("Text"):Connect(function()
+            configInput = InputBox.Text
+        end)
+        
+        -- Save button
+        ConfigSection:AddButton({
+            Name = "Save Config",
+            Callback = function()
+                if configInput ~= "" then
+                    if ConfigManager:SaveConfig(configInput) then
+                        print("[Nebula] Config saved:", configInput)
+                        InputBox.Text = ""
+                        configInput = ""
+                    end
+                else
+                    print("[Nebula] Please enter a config name")
+                end
+            end
+        })
+        
+        -- Load config dropdown
+        local configDropdown = ConfigSection:AddDropdown({
+            Name = "Load Config",
+            Items = ConfigManager:GetConfigs(),
+            Default = "Select...",
+            Callback = function(selected)
+                if selected ~= "Select..." then
+                    local config = ConfigManager:LoadConfig(selected)
+                    if config then
+                        for key, value in pairs(config) do
+                            ConfigManager.CurrentConfig[key] = value
+                        end
+                        print("[Nebula] Config loaded:", selected)
+                    end
+                end
+            end
+        })
+        
+        -- Delete button
+        ConfigSection:AddButton({
+            Name = "Delete Config",
+            Callback = function()
+                if configInput ~= "" then
+                    ConfigManager:DeleteConfig(configInput)
+                    configDropdown:Refresh(ConfigManager:GetConfigs())
+                    print("[Nebula] Config deleted:", configInput)
+                    InputBox.Text = ""
+                    configInput = ""
+                else
+                    print("[Nebula] Please enter a config name to delete")
+                end
+            end
+        })
+        
+        -- Auto-load toggle
+        ConfigSection:AddToggle({
+            Name = "Auto Load Last Config",
+            Default = ConfigManager.AutoLoadEnabled,
+            Callback = function(state)
+                ConfigManager.AutoLoadEnabled = state
+                print("[Nebula] Auto-load:", state)
+            end
+        })
+        
+        -- Refresh configs button
+        ConfigSection:AddButton({
+            Name = "Refresh Configs",
+            Callback = function()
+                configDropdown:Refresh(ConfigManager:GetConfigs())
+                print("[Nebula] Configs refreshed")
+            end
+        })
     end
     
     -- Auto-load config if enabled
